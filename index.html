@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Dots</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Create 6 glowing white dots
+        const dots = [];
+        for (let i = 0; i < 6; i++) {
+            dots.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 8
+            });
+        }
+
+        let selectedDots = [];
+
+        function drawDots() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'white';
+
+            dots.forEach(dot => {
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+            });
+        }
+
+        function drawLines() {
+            ctx.shadowBlur = 0; // No glow on lines
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < selectedDots.length; i += 2) {
+                if (selectedDots[i + 1]) {
+                    const d1 = selectedDots[i];
+                    const d2 = selectedDots[i + 1];
+                    ctx.beginPath();
+                    ctx.moveTo(d1.x, d1.y);
+                    ctx.lineTo(d2.x, d2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawDots();
+            drawLines();
+        }
+
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // Disable right-click menu
+
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Check if clicked on a dot
+            dots.forEach(dot => {
+                const dist = Math.hypot(dot.x - mouseX, dot.y - mouseY);
+                if (dist < dot.radius + 5) {
+                    selectedDots.push(dot);
+                    if (selectedDots.length > 2) {
+                        selectedDots = selectedDots.slice(-2); // Keep only last 2
+                    }
+                    redraw();
+                }
+            });
+        });
+
+        redraw();
+    </script>
+</body>
+</html>
