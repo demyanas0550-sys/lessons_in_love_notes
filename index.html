@@ -13,54 +13,64 @@
     min-height: 100vh;
     position: relative;
   }
-  /* Buttons at bottom corners (Create Category / Create Note) */
+
+  /* Generic small dark buttons (Create Category / Create Note / Edit Note) */
   .btn {
     background-color: #333;
     color: white;
     padding: 10px 14px;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.08s;
     font-weight: bold;
     font-size: 14px;
     user-select: none;
   }
-  .btn:hover {
-    background-color: #555;
-  }
-  .btn-round {
-    border-radius: 12px;
-  }
-  .btn-circle {
-    border-radius: 9999px;
-  }
+  .btn:hover { background-color: #555; transform: translateY(-1px); }
+  .btn-round { border-radius: 12px; }
+  .btn-circle { border-radius: 9999px; padding: 10px 12px; }
+
   .bottom-left { position: absolute; bottom: 20px; left: 20px; z-index: 10;}
   .bottom-right { position: absolute; bottom: 20px; right: 20px; z-index: 10;}
 
-  /* Paper-shaped style for categories, notes, edit button */
+  /* Paper-shaped style (matches the image) */
   .paper-btn {
-    background: white;
-    color: black;
-    padding: 20px;
+    /* Layout & look */
+    display: inline-block;
+    min-width: 150px;
+    padding: 18px 20px;
+    text-align: center;
+    margin: 8px;
+    cursor: pointer;
+    user-select: none;
+    border: none;
+
+    /* Paper-like visual */
+    background: linear-gradient(180deg, #ffffff 96%, #f2f2f2 100%);
+    color: #111;
     border-radius: 6px;
     box-shadow:
-      0 4px 6px rgba(0,0,0,0.2),
-      inset 0 2px 5px rgba(255,255,255,0.9),
-      inset 0 -5px 5px rgba(242,242,242,0.7);
-    min-width: 150px;
-    display: inline-block;
-    text-align: center;
-    margin: 5px;
-    cursor: pointer;
-    transition: transform 0.2s;
-    background-image: linear-gradient(to bottom, white 97%, #f2f2f2 100%);
-    user-select: none;
-  }
-  .paper-btn:hover {
-    transform: scale(1.05);
-  }
+      /* drop shadow cast */
+      0 6px 18px rgba(0,0,0,0.25),
+      /* light top bevel */
+      inset 0 3px 6px rgba(255,255,255,0.9),
+      /* subtle bottom shading */
+      inset 0 -6px 8px rgba(230,230,230,0.6);
 
-  /* Container for categories or notes */
+    /* subtle border similar to printed paper */
+    outline: 1px solid rgba(0,0,0,0.04);
+
+    /* typography */
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  /* Make them focusable & keyboard-friendly */
+  .paper-btn:focus { box-shadow: 0 8px 22px rgba(0,0,0,0.32), inset 0 3px 6px rgba(255,255,255,0.9); outline: none; transform: translateY(-2px); }
+  .paper-btn:hover { transform: translateY(-3px); }
+
+  /* Container for categories / notes */
   #app > div {
     padding: 20px;
   }
@@ -73,11 +83,16 @@
   .center h1 {
     font-size: 2em;
     margin-bottom: 20px;
+    color: #fff;
   }
   .center p {
     font-size: 1em;
     white-space: pre-wrap;
+    color: #ddd;
   }
+
+  /* Small tweak so buttons wrap nicely on small screens */
+  .tiles { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
 </style>
 </head>
 <body>
@@ -98,32 +113,37 @@
 
     if (view === "home") {
       const container = document.createElement("div");
+      container.className = "tiles";
       categories.forEach(cat => {
-        const div = document.createElement("div");
-        div.className = "paper-btn";
-        div.textContent = cat;
-        div.onclick = () => { 
+        // use a button element styled as paper
+        const btn = document.createElement("button");
+        btn.className = "paper-btn";
+        btn.type = "button";
+        btn.textContent = cat;
+        btn.onclick = () => {
           previousView = "home";
-          view = cat; 
-          render(); 
+          view = cat;
+          render();
         };
-        container.appendChild(div);
+        container.appendChild(btn);
       });
       app.appendChild(container);
     } 
     else if (categories.includes(view)) {
       const container = document.createElement("div");
+      container.className = "tiles";
       notes[view].forEach(note => {
-        const div = document.createElement("div");
-        div.className = "paper-btn";
-        div.textContent = note.title;
-        div.onclick = () => {
+        const btn = document.createElement("button");
+        btn.className = "paper-btn";
+        btn.type = "button";
+        btn.textContent = note.title;
+        btn.onclick = () => {
           previousView = view;
           selectedNote = note;
           view = "note";
           render();
         };
-        container.appendChild(div);
+        container.appendChild(btn);
       });
       app.appendChild(container);
     } 
@@ -139,8 +159,9 @@
       text.textContent = selectedNote.text;
       div.appendChild(text);
 
+      // EDIT NOTE: this one should NOT be paper-shaped per your request
       const editBtn = document.createElement("button");
-      editBtn.className = "paper-btn";
+      editBtn.className = "btn btn-round";
       editBtn.style.minWidth = "auto";
       editBtn.style.marginTop = "30px";
       editBtn.textContent = "Edit Note";
@@ -158,11 +179,12 @@
       app.appendChild(div);
     }
 
-    // Create Category button
+    // Create Category button (bottom-left) - keep dark style (excluded)
     let createCatBtn = document.querySelector(".bottom-left");
     if (!createCatBtn) {
       createCatBtn = document.createElement("button");
       createCatBtn.className = "btn btn-round bottom-left";
+      createCatBtn.type = "button";
       createCatBtn.textContent = "+ Create Category";
       createCatBtn.onclick = () => {
         const name = prompt("Name your category");
@@ -180,11 +202,12 @@
       document.body.appendChild(createCatBtn);
     }
 
-    // Create Note button
+    // Create Note button (bottom-right) - keep dark style (excluded)
     let createNoteBtn = document.querySelector(".bottom-right");
     if (!createNoteBtn) {
       createNoteBtn = document.createElement("button");
       createNoteBtn.className = "btn btn-circle bottom-right";
+      createNoteBtn.type = "button";
       createNoteBtn.textContent = "+ Create Note";
       createNoteBtn.onclick = () => {
         if (categories.length === 0) {
