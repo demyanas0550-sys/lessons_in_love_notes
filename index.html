@@ -46,15 +46,9 @@
   .category:hover, .note-card:hover {
     transform: scale(1.05);
   }
-  .top-left, .top-right, .bottom-left, .bottom-right {
-    position: absolute;
-  }
-  .bottom-left { bottom: 20px; left: 20px; }
-  .bottom-right { bottom: 20px; right: 20px; }
-  .top-left { top: 20px; left: 20px; }
-  .center {
-    text-align: center;
-  }
+  .bottom-left { position: absolute; bottom: 20px; left: 20px; }
+  .bottom-right { position: absolute; bottom: 20px; right: 20px; }
+  .center { text-align: center; }
 </style>
 </head>
 <body>
@@ -68,13 +62,10 @@
   let notes = {}; // categoryName: [{id, title, text}]
   let view = "home"; // "home" | categoryName | "note"
   let selectedNote = null;
+  let previousView = null; // To know where to go back
 
   function render() {
-    // Clear app content
     app.innerHTML = "";
-
-    // Remove floating buttons from previous render
-    document.querySelectorAll(".floating-btn").forEach(btn => btn.remove());
 
     if (view === "home") {
       const container = document.createElement("div");
@@ -82,17 +73,23 @@
         const div = document.createElement("div");
         div.className = "category";
         div.textContent = cat;
-        div.onclick = () => { view = cat; render(); };
+        div.onclick = () => { 
+          previousView = "home";
+          view = cat; 
+          render(); 
+        };
         container.appendChild(div);
       });
       app.appendChild(container);
-    } else if (categories.includes(view)) {
+    } 
+    else if (categories.includes(view)) {
       const container = document.createElement("div");
       notes[view].forEach(note => {
         const div = document.createElement("div");
         div.className = "note-card";
         div.textContent = note.title;
         div.onclick = () => {
+          previousView = view;
           selectedNote = note;
           view = "note";
           render();
@@ -100,7 +97,8 @@
         container.appendChild(div);
       });
       app.appendChild(container);
-    } else if (view === "note" && selectedNote) {
+    } 
+    else if (view === "note" && selectedNote) {
       const div = document.createElement("div");
       div.className = "center";
       const title = document.createElement("h1");
@@ -129,18 +127,9 @@
       app.appendChild(div);
     }
 
-    // Back button (except home)
-    if (view !== "home") {
-      const backBtn = document.createElement("button");
-      backBtn.className = "btn btn-round top-left floating-btn";
-      backBtn.textContent = "← Back";
-      backBtn.onclick = () => { view = "home"; render(); };
-      document.body.appendChild(backBtn);
-    }
-
     // Create Category button
     const createCatBtn = document.createElement("button");
-    createCatBtn.className = "btn btn-round bottom-left floating-btn";
+    createCatBtn.className = "btn btn-round bottom-left";
     createCatBtn.textContent = "+ Create Category";
     createCatBtn.onclick = () => {
       const name = prompt("Name your category");
@@ -154,7 +143,7 @@
 
     // Create Note button
     const createNoteBtn = document.createElement("button");
-    createNoteBtn.className = "btn btn-circle bottom-right floating-btn";
+    createNoteBtn.className = "btn btn-circle bottom-right";
     createNoteBtn.textContent = "+ Create Note";
     createNoteBtn.onclick = () => {
       if (categories.length === 0) return alert("No categories yet!");
@@ -170,6 +159,17 @@
     };
     document.body.appendChild(createNoteBtn);
   }
+
+  // Handle ESC key to go back
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (previousView) {
+        view = previousView;
+        previousView = (view === "home") ? null : "home";
+        render();
+      }
+    }
+  });
 
   render();
 </script>
