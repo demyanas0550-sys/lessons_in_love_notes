@@ -1,3 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Notes</title>
+<style>
+  body {
+    margin: 0;
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    position: relative;
+  }
+  .btn {
+    background-color: #333;
+    color: white;
+    padding: 10px 14px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .btn:hover {
+    background-color: #555;
+  }
+  .btn-round {
+    border-radius: 12px;
+  }
+  .btn-circle {
+    border-radius: 9999px;
+  }
+  .category, .note-card {
+    background-color: white;
+    color: black;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(255,255,255,0.8);
+    cursor: pointer;
+    min-width: 150px;
+    display: inline-block;
+    text-align: center;
+    margin: 5px;
+    transition: transform 0.2s;
+  }
+  .category:hover, .note-card:hover {
+    transform: scale(1.05);
+  }
+  .top-left, .top-right, .bottom-left, .bottom-right {
+    position: absolute;
+  }
+  .bottom-left { bottom: 20px; left: 20px; }
+  .bottom-right { bottom: 20px; right: 20px; }
+  .top-left { top: 20px; left: 20px; }
+  .center {
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
 <script>
   const app = document.getElementById('app');
 
@@ -7,10 +70,10 @@
   let selectedNote = null;
 
   function render() {
-    // Clear everything inside #app
+    // Clear app content
     app.innerHTML = "";
 
-    // Remove any old floating buttons
+    // Remove floating buttons from previous render
     document.querySelectorAll(".floating-btn").forEach(btn => btn.remove());
 
     if (view === "home") {
@@ -66,7 +129,7 @@
       app.appendChild(div);
     }
 
-    // Back button (except on home)
+    // Back button (except home)
     if (view !== "home") {
       const backBtn = document.createElement("button");
       backBtn.className = "btn btn-round top-left floating-btn";
@@ -75,7 +138,7 @@
       document.body.appendChild(backBtn);
     }
 
-    // Create Category Button
+    // Create Category button
     const createCatBtn = document.createElement("button");
     createCatBtn.className = "btn btn-round bottom-left floating-btn";
     createCatBtn.textContent = "+ Create Category";
@@ -89,7 +152,7 @@
     };
     document.body.appendChild(createCatBtn);
 
-    // Create Note Button
+    // Create Note button
     const createNoteBtn = document.createElement("button");
     createNoteBtn.className = "btn btn-circle bottom-right floating-btn";
     createNoteBtn.textContent = "+ Create Note";
@@ -110,3 +173,6 @@
 
   render();
 </script>
+
+</body>
+</html>
