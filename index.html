@@ -6,9 +6,10 @@
 <style>
 body {
   font-family: sans-serif;
-  background: #f4f4f4;
+  background: #000; /* fully black */
   margin: 0;
   padding: 0;
+  color: white;
 }
 
 #app {
@@ -32,8 +33,8 @@ button {
   justify-content: center;
   align-items: center;
 
-  width: 108px;  /* fixed width */
-  height: 144px; /* fixed height */
+  width: 120px;  /* fixed width */
+  height: 120px; /* fixed height */
   padding: 10px;
 
   text-align: center;
@@ -73,6 +74,7 @@ button {
   background: white;
   padding: 20px;
   border-radius: 6px;
+  color: black;
 }
 
 </style>
@@ -83,7 +85,6 @@ button {
   <div class="header">
     <button id="createCat">Create Category</button>
     <button id="createNote">Create Note</button>
-    <button id="backBtn" style="display:none;">Back</button>
   </div>
   <div id="content"></div>
 </div>
@@ -119,7 +120,6 @@ loadData();
 const content = document.getElementById("content");
 const createCatBtn = document.getElementById("createCat");
 const createNoteBtn = document.getElementById("createNote");
-const backBtn = document.getElementById("backBtn");
 
 createCatBtn.onclick = () => {
   const name = prompt("Name your category");
@@ -170,21 +170,23 @@ createNoteBtn.onclick = () => {
   }
 };
 
-backBtn.onclick = () => {
-  if (previousView) {
-    view = previousView;
-    previousView = null;
-    selectedNote = null;
-  } else {
-    view = "home";
-    selectedNote = null;
+// ESC key to go back
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (previousView) {
+      view = previousView;
+      previousView = null;
+      selectedNote = null;
+    } else {
+      view = "home";
+      selectedNote = null;
+    }
+    render();
   }
-  render();
-};
+});
 
 function render() {
   content.innerHTML = "";
-  backBtn.style.display = view === "home" ? "none" : "inline-block";
 
   if (view === "home") {
     const grid = document.createElement("div");
