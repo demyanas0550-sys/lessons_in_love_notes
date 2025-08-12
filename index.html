@@ -35,35 +35,39 @@
 
   /* Paper-shaped style (matches the image) */
   .paper-btn {
-    /* Layout & look */
-    display: inline-block;
-    min-width: 120px;
-    padding: 64px 7px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 120px;        /* fixed width */
+    height: 120px;       /* fixed height */
+    padding: 10px;       /* adjusted padding */
+
     text-align: center;
     margin: 8px;
     cursor: pointer;
     user-select: none;
     border: none;
 
-    /* Paper-like visual */
     background: linear-gradient(180deg, #ffffff 96%, #f2f2f2 100%);
     color: #111;
     border-radius: 6px;
     box-shadow:
-      /* drop shadow cast */
       0 6px 18px rgba(0,0,0,0.25),
-      /* light top bevel */
       inset 0 3px 6px rgba(255,255,255,0.9),
-      /* subtle bottom shading */
       inset 0 -6px 8px rgba(230,230,230,0.6);
 
-    /* subtle border similar to printed paper */
     outline: 1px solid rgba(0,0,0,0.04);
 
-    /* typography */
     font-weight: 700;
     font-size: 14px;
-    line-height: 1;
+    line-height: 1.2;
+  
+    white-space: normal;       /* allow wrapping */
+    overflow-wrap: break-word; /* break long words */
+    word-break: break-word;
+    overflow: hidden;          /* hide overflow */
+
     transition: transform 0.14s ease, box-shadow 0.14s ease;
   }
   /* Make them focusable & keyboard-friendly */
@@ -179,7 +183,7 @@
       app.appendChild(div);
     }
 
-    // Create Category button (bottom-left) - keep dark style (excluded)
+    // Create Category button (bottom-left)
     let createCatBtn = document.querySelector(".bottom-left");
     if (!createCatBtn) {
       createCatBtn = document.createElement("button");
@@ -190,35 +194,35 @@
         const name = prompt("Name your category");
         if (name) {
           const trimmed = name.trim();
-          if (!trimmed) return; // ignore empty input
+          if (!trimmed) return;
 
-          if (!categories.includes(trimmed)) {
-            // Create new category
-            categories.push(trimmed);
-            notes[trimmed] = [];
-            render();
-          } else {
-            // Confirm deletion
-            const confirmed = confirm(`Category "${trimmed}" exists. Delete it and all its notes?`);
-            if (confirmed) {
-              // Remove category from categories array
-              categories = categories.filter(cat => cat !== trimmed);
-              // Remove all notes of this category
+          // Delete category if exists
+          if (categories.includes(trimmed)) {
+            if (confirm(`Delete category "${trimmed}" and all its notes?`)) {
+              categories = categories.filter(c => c !== trimmed);
               delete notes[trimmed];
-              // If current view is this category or note inside it, reset to home
-              if (view === trimmed || (view === "note" && selectedNote && notes[trimmed]?.some(n => n.id === selectedNote.id))) {
+              if (view === trimmed || previousView === trimmed) {
                 view = "home";
+                previousView = null;
                 selectedNote = null;
               }
               render();
+              return;
+            } else {
+              return;
             }
           }
+
+          // Create new category if not exists
+          categories.push(trimmed);
+          notes[trimmed] = [];
+          render();
         }
       };
       document.body.appendChild(createCatBtn);
     }
 
-    // Create Note button (bottom-right) - keep dark style (excluded)
+    // Create Note button (bottom-right)
     let createNoteBtn = document.querySelector(".bottom-right");
     if (!createNoteBtn) {
       createNoteBtn = document.createElement("button");
