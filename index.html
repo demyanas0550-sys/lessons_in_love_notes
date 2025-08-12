@@ -190,12 +190,28 @@
         const name = prompt("Name your category");
         if (name) {
           const trimmed = name.trim();
-          if (trimmed && !categories.includes(trimmed)) {
+          if (!trimmed) return; // ignore empty input
+
+          if (!categories.includes(trimmed)) {
+            // Create new category
             categories.push(trimmed);
             notes[trimmed] = [];
             render();
-          } else if (categories.includes(trimmed)) {
-            alert("Category already exists!");
+          } else {
+            // Confirm deletion
+            const confirmed = confirm(`Category "${trimmed}" exists. Delete it and all its notes?`);
+            if (confirmed) {
+              // Remove category from categories array
+              categories = categories.filter(cat => cat !== trimmed);
+              // Remove all notes of this category
+              delete notes[trimmed];
+              // If current view is this category or note inside it, reset to home
+              if (view === trimmed || (view === "note" && selectedNote && notes[trimmed]?.some(n => n.id === selectedNote.id))) {
+                view = "home";
+                selectedNote = null;
+              }
+              render();
+            }
           }
         }
       };
