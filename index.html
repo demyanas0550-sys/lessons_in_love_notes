@@ -1,272 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Notes Paper</title>
+<meta charset="UTF-8">
+<title>Notes App</title>
 <style>
-  body {
-    margin: 0;
-    background-color: black;
-    color: white;
-    font-family: Arial, sans-serif;
-    min-height: 100vh;
-    position: relative;
-  }
+body {
+  font-family: sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
 
-  /* Generic small dark buttons (Create Category / Create Note / Edit Note) */
-  .btn {
-    background-color: #333;
-    color: white;
-    padding: 10px 14px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.08s;
-    font-weight: bold;
-    font-size: 14px;
-    user-select: none;
-  }
-  .btn:hover { background-color: #555; transform: translateY(-1px); }
-  .btn-round { border-radius: 12px; }
-  .btn-circle { border-radius: 9999px; padding: 10px 12px; }
+#app {
+  padding: 20px;
+}
 
-  .bottom-left { position: absolute; bottom: 20px; left: 20px; z-index: 10;}
-  .bottom-right { position: absolute; bottom: 20px; right: 20px; z-index: 10;}
+.header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
-  /* Paper-shaped style (matches the image) */
-  .paper-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+button {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
 
-    width: 108px;        /* fixed width */
-    height: 144px;       /* fixed height */
-    padding: 10px;       /* adjusted padding */
+.paper-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-    text-align: center;
-    margin: 8px;
-    cursor: pointer;
-    user-select: none;
-    border: none;
+  width: 108px;  /* fixed width */
+  height: 144px; /* fixed height */
+  padding: 10px;
 
-    background: linear-gradient(180deg, #ffffff 96%, #f2f2f2 100%);
-    color: #111;
-    border-radius: 6px;
-    box-shadow:
-      0 6px 18px rgba(0,0,0,0.25),
-      inset 0 3px 6px rgba(255,255,255,0.9),
-      inset 0 -6px 8px rgba(230,230,230,0.6);
+  text-align: center;
+  margin: 8px;
+  cursor: pointer;
+  user-select: none;
+  border: none;
 
-    outline: 1px solid rgba(0,0,0,0.04);
+  background: linear-gradient(180deg, #ffffff 96%, #f2f2f2 100%);
+  color: #111;
+  border-radius: 6px;
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.25),
+    inset 0 3px 6px rgba(255,255,255,0.9),
+    inset 0 -6px 8px rgba(230,230,230,0.6);
 
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 1.2;
+  outline: 1px solid rgba(0,0,0,0.04);
+
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
   
-    white-space: normal;       /* allow wrapping */
-    overflow-wrap: break-word; /* break long words */
-    word-break: break-word;
-    overflow: hidden;          /* hide overflow */
+  white-space: normal;       /* allow wrapping */
+  overflow-wrap: break-word; /* break long words */
+  word-break: break-word;
+  overflow: hidden;          /* hide overflow if any */
 
-    transition: transform 0.14s ease, box-shadow 0.14s ease;
-  }
-  /* Make them focusable & keyboard-friendly */
-  .paper-btn:focus { box-shadow: 0 8px 22px rgba(0,0,0,0.32), inset 0 3px 6px rgba(255,255,255,0.9); outline: none; transform: translateY(-2px); }
-  .paper-btn:hover { transform: translateY(-3px); }
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
 
-  /* Container for categories / notes */
-  #app > div {
-    padding: 20px;
-  }
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+}
 
-  /* Centered text for note view */
-  .center {
-    text-align: center;
-    padding: 20px;
-  }
-  .center h1 {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #fff;
-  }
-  .center p {
-    font-size: 1em;
-    white-space: pre-wrap;
-    color: #ddd;
-  }
+.note-view {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+}
 
-  /* Small tweak so buttons wrap nicely on small screens */
-  .tiles { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
 </style>
 </head>
 <body>
 
-<div id="app"></div>
+<div id="app">
+  <div class="header">
+    <button id="createCat">Create Category</button>
+    <button id="createNote">Create Note</button>
+    <button id="backBtn" style="display:none;">Back</button>
+  </div>
+  <div id="content"></div>
+</div>
 
 <script>
-  const app = document.getElementById('app');
+let categories = [];
+let notes = {};
+let view = "home";
+let previousView = null;
+let selectedNote = null;
 
-  let categories = [];
-  let notes = {}; // categoryName: [{id, title, text}]
-  let view = "home"; // "home" | categoryName | "note"
-  let selectedNote = null;
-  let previousView = null;
+// --- LocalStorage functions ---
+function saveData() {
+  localStorage.setItem("notesAppCategories", JSON.stringify(categories));
+  localStorage.setItem("notesAppNotes", JSON.stringify(notes));
+}
 
-  function render() {
-    app.innerHTML = "";
+function loadData() {
+  const savedCategories = localStorage.getItem("notesAppCategories");
+  const savedNotes = localStorage.getItem("notesAppNotes");
 
-    if (view === "home") {
-      const container = document.createElement("div");
-      container.className = "tiles";
-      categories.forEach(cat => {
-        // use a button element styled as paper
-        const btn = document.createElement("button");
-        btn.className = "paper-btn";
-        btn.type = "button";
-        btn.textContent = cat;
-        btn.onclick = () => {
-          previousView = "home";
-          view = cat;
-          render();
-        };
-        container.appendChild(btn);
-      });
-      app.appendChild(container);
-    } 
-    else if (categories.includes(view)) {
-      const container = document.createElement("div");
-      container.className = "tiles";
-      notes[view].forEach(note => {
-        const btn = document.createElement("button");
-        btn.className = "paper-btn";
-        btn.type = "button";
-        btn.textContent = note.title;
-        btn.onclick = () => {
-          previousView = view;
-          selectedNote = note;
-          view = "note";
-          render();
-        };
-        container.appendChild(btn);
-      });
-      app.appendChild(container);
-    } 
-    else if (view === "note" && selectedNote) {
-      const div = document.createElement("div");
-      div.className = "center";
-
-      const title = document.createElement("h1");
-      title.textContent = selectedNote.title;
-      div.appendChild(title);
-
-      const text = document.createElement("p");
-      text.textContent = selectedNote.text;
-      div.appendChild(text);
-
-      // EDIT NOTE: this one should NOT be paper-shaped per your request
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn btn-round";
-      editBtn.style.minWidth = "auto";
-      editBtn.style.marginTop = "30px";
-      editBtn.textContent = "Edit Note";
-      editBtn.onclick = () => {
-        const newTitle = prompt("Edit title:", selectedNote.title);
-        if (newTitle === null) return; // Cancelled
-        const newText = prompt("Edit text:", selectedNote.text);
-        if (newText === null) return; // Cancelled
-        selectedNote.title = newTitle.trim() || selectedNote.title;
-        selectedNote.text = newText.trim();
-        render();
-      };
-      div.appendChild(editBtn);
-
-      app.appendChild(div);
-    }
-
-    // Create Category button (bottom-left)
-    let createCatBtn = document.querySelector(".bottom-left");
-    if (!createCatBtn) {
-      createCatBtn = document.createElement("button");
-      createCatBtn.className = "btn btn-round bottom-left";
-      createCatBtn.type = "button";
-      createCatBtn.textContent = "+ Create Category";
-      createCatBtn.onclick = () => {
-        const name = prompt("Name your category");
-        if (name) {
-          const trimmed = name.trim();
-          if (!trimmed) return;
-
-          // Delete category if exists
-          if (categories.includes(trimmed)) {
-            if (confirm(`Delete category "${trimmed}" and all its notes?`)) {
-              categories = categories.filter(c => c !== trimmed);
-              delete notes[trimmed];
-              if (view === trimmed || previousView === trimmed) {
-                view = "home";
-                previousView = null;
-                selectedNote = null;
-              }
-              render();
-              return;
-            } else {
-              return;
-            }
-          }
-
-          // Create new category if not exists
-          categories.push(trimmed);
-          notes[trimmed] = [];
-          render();
-        }
-      };
-      document.body.appendChild(createCatBtn);
-    }
-
-    // Create Note button (bottom-right)
-    let createNoteBtn = document.querySelector(".bottom-right");
-    if (!createNoteBtn) {
-      createNoteBtn = document.createElement("button");
-      createNoteBtn.className = "btn btn-circle bottom-right";
-      createNoteBtn.type = "button";
-      createNoteBtn.textContent = "+ Create Note";
-      createNoteBtn.onclick = () => {
-        if (categories.length === 0) {
-          alert("No categories yet!");
-          return;
-        }
-        const category = prompt("What category?\n" + categories.join(", "));
-        if (category && categories.includes(category.trim())) {
-          const title = prompt("Note title:");
-          if (title && title.trim()) {
-            const newNote = { id: Date.now(), title: title.trim(), text: "" };
-            notes[category.trim()].push(newNote);
-            render();
-          }
-        } else if (category) {
-          alert("Category does not exist.");
-        }
-      };
-      document.body.appendChild(createNoteBtn);
-    }
+  if (savedCategories) {
+    categories = JSON.parse(savedCategories);
   }
+  if (savedNotes) {
+    notes = JSON.parse(savedNotes);
+  }
+}
 
-  // ESC key to go back
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      if (previousView) {
-        view = previousView;
-        if (view === "home") {
+// --- Load stored data on start ---
+loadData();
+
+const content = document.getElementById("content");
+const createCatBtn = document.getElementById("createCat");
+const createNoteBtn = document.getElementById("createNote");
+const backBtn = document.getElementById("backBtn");
+
+createCatBtn.onclick = () => {
+  const name = prompt("Name your category");
+  if (name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    if (categories.includes(trimmed)) {
+      if (confirm(`Delete category "${trimmed}" and all its notes?`)) {
+        categories = categories.filter(c => c !== trimmed);
+        delete notes[trimmed];
+        if (view === trimmed || previousView === trimmed) {
+          view = "home";
           previousView = null;
-        } else {
-          previousView = "home";
+          selectedNote = null;
         }
-        selectedNote = null;
+        saveData();
         render();
+        return;
+      } else {
+        return;
       }
     }
-  });
 
+    categories.push(trimmed);
+    notes[trimmed] = [];
+    saveData();
+    render();
+  }
+};
+
+createNoteBtn.onclick = () => {
+  if (categories.length === 0) {
+    alert("No categories yet!");
+    return;
+  }
+  const category = prompt("What category?\n" + categories.join(", "));
+  if (category && categories.includes(category.trim())) {
+    const title = prompt("Note title:");
+    if (title && title.trim()) {
+      const newNote = { id: Date.now(), title: title.trim(), text: "" };
+      notes[category.trim()].push(newNote);
+      saveData();
+      render();
+    }
+  } else if (category) {
+    alert("Category does not exist.");
+  }
+};
+
+backBtn.onclick = () => {
+  if (previousView) {
+    view = previousView;
+    previousView = null;
+    selectedNote = null;
+  } else {
+    view = "home";
+    selectedNote = null;
+  }
   render();
+};
+
+function render() {
+  content.innerHTML = "";
+  backBtn.style.display = view === "home" ? "none" : "inline-block";
+
+  if (view === "home") {
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    categories.forEach(cat => {
+      const btn = document.createElement("div");
+      btn.className = "paper-btn";
+      btn.textContent = cat;
+      btn.onclick = () => {
+        previousView = "home";
+        view = cat;
+        render();
+      };
+      grid.appendChild(btn);
+    });
+    content.appendChild(grid);
+  } 
+  else if (categories.includes(view)) {
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    notes[view].forEach(note => {
+      const btn = document.createElement("div");
+      btn.className = "paper-btn";
+      btn.textContent = note.title;
+      btn.onclick = () => {
+        previousView = view;
+        view = "note";
+        selectedNote = note;
+        render();
+      };
+      grid.appendChild(btn);
+    });
+    content.appendChild(grid);
+  } 
+  else if (view === "note" && selectedNote) {
+    const noteDiv = document.createElement("div");
+    noteDiv.className = "note-view";
+    const title = document.createElement("h2");
+    title.textContent = selectedNote.title;
+    const text = document.createElement("p");
+    text.textContent = selectedNote.text;
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.onclick = () => {
+      const newTitle = prompt("Edit title:", selectedNote.title);
+      if (newTitle === null) return;
+      const newText = prompt("Edit text:", selectedNote.text);
+      if (newText === null) return;
+      selectedNote.title = newTitle.trim() || selectedNote.title;
+      selectedNote.text = newText.trim();
+      saveData();
+      render();
+    };
+
+    noteDiv.appendChild(title);
+    noteDiv.appendChild(text);
+    noteDiv.appendChild(editBtn);
+    content.appendChild(noteDiv);
+  }
+}
+
+render();
 </script>
 
 </body>
